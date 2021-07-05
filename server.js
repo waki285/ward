@@ -7,7 +7,8 @@ const fs = require('fs');
 const { Signale } = require('signale');
 const pool = require('./pool');
 const discord = require('./discord');
-
+const { verify } = require("hcaptcha");
+const fetch = require("node-fetch");
 // Config
 const config = require('./config.json');
 
@@ -23,27 +24,39 @@ app.use(express.json());
 app.use(express.urlencoded({
     extended: true
 }));
-
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, '/html/notfound.html'), {})
+})
 // GET /verify/id
 app.get('/verify/:verifyId?', (req, res) => {
     if (!req.params.verifyId) return res.sendFile(path.join(__dirname, '/html/invalidLink.html'));
     if (!pool.isValidLink(req.params.verifyId)) return res.sendFile(path.join(__dirname, '/html/invalidLink.html'));
-    res.render(path.join(__dirname, '/html/verify.html'), { publicKey: config.recaptcha['public-key'] });
+    res.render(path.join(__dirname, '/html/verify.html'), { publicKey: config.recaptcha['public-key'] , hcaptchasitekey: process.env.hcaptchasitekey});
 });
 
 // POST /verify/id
 app.post('/verify/:verifyId?', async (req, res) => {
-    if (!req.body || !req.body['g-recaptcha-response']) return res.sendFile(path.join(__dirname, '/html/invalidLink.html'));
+    if (!req.body || !req.body['h-captcha-response']) return res.sendFile(path.join(__dirname, '/html/invalidLink.html'));
 
-    const response = await axios({
+/*    const response = await axios({
         method: 'post',
         url: `https://www.google.com/recaptcha/api/siteverify?secret=${config.recaptcha['secret-key']}&response=${req.body['g-recaptcha-response']}`,
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
+    });*/
+//    logger.info(req.body)
+    //const data = await verify(process.env.hcaptchasecret, req.body['h-captcha-responce'])
+    let data = await fetch("https://hcaptcha.com/siteverify", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `response=${req.body['h-captcha-response']}&secret=${process.env.hcaptchasecret}`
     });
-
-    if (!response.data.success) return res.sendFile(path.join(__dirname, '/html/invalidCaptcha.html'));
+    data = await data.json();
+//    logger.complete(data)
+    if (!data.success) return res.sendFile(path.join(__dirname, '/html/invalidCaptcha.html'));
     if (!pool.isValidLink(req.params.verifyId)) return res.sendFile(path.join(__dirname, '/html/invalidLink.html'));
     discord.addRole(pool.getDiscordId(req.params.verifyId));
     pool.removeLink(req.params.verifyId);
@@ -55,9 +68,9 @@ function main() {
         https.createServer({
             key: fs.readFileSync('private.pem'),
             cert: fs.readFileSync('certificate.pem')
-        }, app).listen(port, () => logger.info(`Listening on port ${port}.`));
+        }, app).listen(port, () => logger.success(`${port}でポートを開きました`));
     } else {
-        app.listen(port, () => logger.info(`Listening on port ${port}.`));
+        app.listen(port, () => logger.success(`${port}でポートを開きました`));
     }
 }
 
