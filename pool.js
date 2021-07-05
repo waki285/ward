@@ -17,7 +17,7 @@ function createLink(discordID) {
     setTimeout(function() {
         if (isValidLink(linkID)) removeLink(linkID);
     }, 900000);
-    logger.info('Created new link ID:', linkID);
+    logger.start('リンク作成しました:', linkID);
     return linkID;
 }
 
@@ -31,6 +31,7 @@ function isValidLink(linkID) {
 function removeLink(linkID) {
     for (let i = 0; i < linkPool.length; i++) if (linkPool[i].linkID == linkID) delete linkPool[i];
     linkPool = linkPool.filter(n => n);
+    logger.pause("リンクを消去しました")
 }
 
 // Get Discord ID from link ID
