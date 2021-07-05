@@ -1,28 +1,34 @@
 <html>
     <head>
         <!-- HTML data -->
-        <title>Discord Verification</title>
+        <title>認証システム</title>
         <!-- CSS file -->
         <link type='text/css' rel="stylesheet" href="../css/style.css">
         <!-- JavaScript files -->
         <script type='text/javascript' src="../js/jquery.min.js"></script>
         <script type='text/javascript' src="../js/particleground.min.js"></script>
         <script type='text/javascript' src="../js/particles.js"></script>
-        <!-- reCAPTCHA JavaScript file -->
-        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        <!-- hCaptcha JavaScript file -->
+        <script src="https://hcaptcha.com/1/api.js" async defer></script>
     </head>
     <body>
         <div id="particles"></div>
         <div id="app">
             <!-- reCAPTCHA form -->
-            <form action="?" method="POST" id="reCAPTCHA">
+<!--            <form action="?" method="POST" id="reCAPTCHA">
                 <div class="g-recaptcha" data-sitekey="<%= publicKey %>" data-callback="onSubmit"></div>
+    -->        </form>
+            <form action="?" method="POST" id="hCaptcha">
+              <div class="h-captcha" data-sitekey="<%= hcaptchasitekey %>" data-callback="onSubmit"></div>
             </form>
         </div>
         <!-- reCAPTCHA callback function -->
         <script>
+ //           function onSubmit() {
+ //               document.getElementById("reCAPTCHA").submit(); 
+ //           }
             function onSubmit() {
-                document.getElementById("reCAPTCHA").submit(); 
+              document.getElementById("hCaptcha").submit();
             }
         </script>
     </body>
